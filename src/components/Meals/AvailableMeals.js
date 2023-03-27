@@ -1,0 +1,116 @@
+import { useState, useEffect } from 'react';
+
+import Card from '../UI/Card';
+import MealItem from './MealItem/MealItem';
+import classes from './AvailableMeals.module.css';
+
+
+
+const AvailableMeals = () => {
+
+  const [meals, setMeals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [httpError, setHttpError] = useState()
+
+  const arrayMeals = [];
+
+  useEffect(() => {
+
+    const fetchMeals = async () => {
+      const res = await fetch('https://food-order-app-5-default-rtdb.asia-southeast1.firebasedatabase.app/meals.json')
+
+      if (!res.ok) {
+        throw new Error('Something went wrong')
+      }
+      /* 
+      -- something went wrong ข้อความที่เราป้อนนี้ จะถูกเก็บไว้ที่ 
+      .message property(ตัวแปร message) ของ error object ที่เราสร้างขึ้น
+      - เมื่อเราสร้าง error object => message property จะถูกสร้างขึ้นมาให้ด้วย
+      .เป็นค่าเริ่มต้น
+      - new Error คือ error object constructor
+       */
+
+      const convertedData = await res.json()
+
+      for (const key in convertedData) {
+        arrayMeals.push({
+          id: key,
+          name: convertedData[key]['name'],
+          description: convertedData[key]['description'],
+          price: +convertedData[key]['price']
+        })
+      }
+      setMeals(arrayMeals)
+      setIsLoading(false)
+    }
+
+    fetchMeals().catch(error => {
+      setIsLoading(false)
+      setHttpError(error.message)
+    })
+  }, [])
+
+  if (isLoading) {
+    return (
+      <section className={classes.MealsLoading}>
+        <p>กำลังชักว่าว.....</p>
+      </section>
+    );
+  }
+
+  if (httpError) {
+    return (
+      <section className={classes.MealsError}>
+        <p>{httpError}</p>
+      </section>
+    );
+  }
+
+  const mealsList = meals.map((meal) => (
+    <MealItem
+      key={meal.id}
+      id={meal.id}
+      name={meal.name}
+      description={meal.description}
+      price={meal.price}
+    />
+  ));
+
+  return (
+    <section className={classes.meals}>
+      <Card>
+        <ul>{mealsList}</ul>
+      </Card>
+    </section>
+  );
+};
+
+export default AvailableMeals;
+
+
+// const DUMMY_MEALS = [
+//   {
+//     id: 'm1',
+//     name: 'Sushi',
+//     description: 'Finest fish and veggies',
+//     price: 22.99,
+//   },
+//   {
+//     id: 'm2',
+//     name: 'Schnitzel',
+//     description: 'A german specialty!',
+//     price: 16.5,
+//   },
+//   {
+//     id: 'm3',
+//     name: 'Barbecue Burger',
+//     description: 'American, raw, meaty',
+//     price: 12.99,
+//   },
+//   {
+//     id: 'm4',
+//     name: 'Green Bowl',
+//     description: 'Healthy...and green...',
+//     price: 18.99,
+//   },
+// ];
